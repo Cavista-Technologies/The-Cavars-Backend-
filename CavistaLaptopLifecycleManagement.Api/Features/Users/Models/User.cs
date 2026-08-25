@@ -1,5 +1,4 @@
-﻿using CavistaLaptopLifecycleManagement.Api.Database.Entities;
-using Immediate.Apis.Shared;
+﻿using Immediate.Apis.Shared;
 using System.Linq.Expressions;
 using System.Text.Json;
 

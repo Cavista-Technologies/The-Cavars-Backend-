@@ -35,7 +35,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Database.Entities
 
     public enum UserLaptopCondition
     {
-        Inactive,
+        Inactive = 1,
         Active
     }
 }

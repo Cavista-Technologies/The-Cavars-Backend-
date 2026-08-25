@@ -1,6 +1,6 @@
 ﻿using CavistaLaptopLifecycleManagement.Api.Database;
 using CavistaLaptopLifecycleManagement.Api.Database.Entities;
-using CavistaLaptopLifecycleManagement.Api.Features.Laptop.Models;
+using CavistaLaptopLifecycleManagement.Api.Features.Shared.Services;
 using CavistaLaptopLifecycleManagement.Api.Features.Ticket.Models;
 using Immediate.Apis.Shared;
 using Immediate.Handlers.Shared;
@@ -22,14 +22,12 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Command
         public sealed record Body
         {
             public required string Description { get; init; }
+
             public required string Comment { get; init; }
         }
 
         public sealed record Command
         {
-            //[FromRoute]
-            //public required int Id { get; init; }
-
             [FromBody]
             public required Body Body { get; init; }
         }
@@ -39,13 +37,14 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Command
             public required Guid TicketId { get; init; }
         }
 
-        private async static ValueTask<Response> HandleAsync(
+        private async static ValueTask<Results<Ok<Response>, BadRequest, NotFound>> HandleAsync(
             Command request,
             //UserLaptopService userLaptopService,
+            AuditTrailService auditTrailService,
             CLMDbContext context,
             CancellationToken token)
         {
-            var userId = Guid.Parse("01a0310a-4365-77c5-b2fb-0ca9aff6a92a"); //Replace with logged in user
+            var userId = Guid.Parse("01a039b0-e899-7bd4-8fb1-623e6df449a7"); //Replace with logged in user
 
             var ticketToAdd = new Database.Entities.Ticket
             {
@@ -58,11 +57,13 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Command
 
             context.Tickets.Add(ticketToAdd);
 
-            var userLaptop = await context.UserLaptops.Where(x => x.UserID == userId && x.Condition == UserLaptopCondition.Active && !x.IsDeprecated).FirstOrDefaultAsync(token);
+            var userLaptop = await context.UserLaptops
+                .Where(x => x.UserID == userId && x.Condition == UserLaptopCondition.Active && !x.IsDeprecated)
+                .FirstOrDefaultAsync(token);
 
             if (userLaptop == null)
             {
-                return default;
+                return TypedResults.NotFound();
             }
 
             var historyToAdd = new LaptopHistory
@@ -80,7 +81,9 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Command
             {
                 if (await context.SaveChangesAsync() > 0)
                 {
-                    return new Response { TicketId = ticketToAdd.Id };
+                    await auditTrailService.AddAuditTrail(userId, AuditTrailService.AuditAction.Create, AuditTrailService.AuditOn.Ticket, ticketToAdd.Id);
+
+                    return TypedResults.Ok(new Response { TicketId = ticketToAdd.Id });
                 }
             }
             catch (Exception ex)
@@ -88,7 +91,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Command
                 Log.Error($"An error occurred => {ex.Message}");
             }
 
-            return new Response { TicketId = ticketToAdd.Id};
+            return TypedResults.BadRequest();
         }
 
     }

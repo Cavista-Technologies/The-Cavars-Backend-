@@ -8,9 +8,13 @@ namespace CavistaLaptopLifecycleManagement.Api.Database
     public sealed partial class CLMDbContext(DbContextOptions<CLMDbContext> options) : DbContext(options)
     {
         public DbSet<User> Users { get; set; }
+
         public DbSet<UserLaptop> UserLaptops { get; set; }
+
         public DbSet<LaptopHistory> LaptopHistories { get; set; }
+
         public DbSet<Ticket> Tickets { get; set; }
+
         public DbSet<AuditTrail> AuditTrails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
