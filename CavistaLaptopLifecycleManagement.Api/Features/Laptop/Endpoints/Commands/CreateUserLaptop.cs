@@ -16,7 +16,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Endpoints
     [MapGroup<LaptopMapGroup>]
     public sealed partial class CreateUserLaptop
     {
-        public sealed record Body
+        public sealed record CreateLaptopBody
         {
             public required string AssetName { get; init; }
 
@@ -47,7 +47,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Endpoints
             public required Guid UserID { get; init; }
 
             [FromBody]
-            public required Body Body { get; init; }
+            public required CreateLaptopBody Body { get; init; }
         }
 
         public sealed record Response

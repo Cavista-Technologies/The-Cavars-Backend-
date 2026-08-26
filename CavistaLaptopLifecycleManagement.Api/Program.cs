@@ -1,14 +1,10 @@
 using CavistaLaptopLifecycleManagement.Api;
 using CavistaLaptopLifecycleManagement.Api.Database;
 using CavistaLaptopLifecycleManagement.Api.Features.Shared;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
-//builder.Services.AddAuthorization();
 
 var configuration = builder.Configuration;
 
@@ -41,10 +37,22 @@ _ = builder.Services.AddCavistaLaptopLifecycleManagementApiServices();
 
 _ = builder.Services.AddCavistaLaptopLifecycleManagementApiHandlers();
 
+var policyName = "CorsPolicy";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: policyName, builder =>
+    {
+        builder.AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.MapOpenApi();
 
@@ -53,6 +61,13 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/openapi/v1.json", "API V1");
     });
 }
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+app.UseCors(policyName);
 
 _ = app.UseRouting();
 

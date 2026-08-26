@@ -19,7 +19,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Command
         internal static Created<Response> TransformResult(Response response) =>
         TypedResults.Created($"/api/tickets/{response.TicketId}", response);
 
-        public sealed record Body
+        public sealed record CreateTicketBody
         {
             public required string Description { get; init; }
 
@@ -29,7 +29,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Command
         public sealed record Command
         {
             [FromBody]
-            public required Body Body { get; init; }
+            public required CreateTicketBody Body { get; init; }
         }
 
         public sealed record Response
