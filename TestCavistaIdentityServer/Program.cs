@@ -1,4 +1,5 @@
 using Duende.IdentityServer.Licensing;
+using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 using System.Globalization;
 using System.Text;
@@ -14,12 +15,22 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    //builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    //{
+    //    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+    //    // Clear out the default known networks and proxies 
+    //    // so it trusts Render's internal load balancers
+    //    options.KnownNetworks.Clear();
+    //    options.KnownProxies.Clear();
+    //});
+
     var app = builder
         .ConfigureLogging()
         .ConfigureServices()
         .ConfigurePipeline();
 
-    if (app.Environment.IsDevelopment())
+    if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     {
         _ = app.Lifetime.ApplicationStopping.Register(() =>
         {

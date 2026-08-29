@@ -1,32 +1,67 @@
-﻿using Duende.IdentityModel.Client;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.HttpOverrides;
 
-Console.WriteLine("Hello, World!");
+var builder = WebApplication.CreateBuilder(args);
 
-// discovery endpoints from metadata
-var client = new HttpClient();
-var disco = await client.GetDiscoveryDocumentAsync("https://localhost:5001");
-if (disco.IsError)
+// Add services to the container.
+builder.Services.AddRazorPages();
+
+try
 {
-    Console.WriteLine(disco.Error);
-    Console.WriteLine(disco.Exception);
+    builder.Services.AddAuthentication(
+    options =>
+    {
+        options.DefaultScheme = "Cookies";
+        options.DefaultChallengeScheme = "oidc";
+    }).AddCookie("Cookies")
+  .AddOpenIdConnect("oidc", options =>
+  {
+      options.Authority = "https://cavistatestidentityserver.onrender.com";
 
-    //return 1;
+      //options.Authority = "https://localhost:5001";
+
+      options.ClientId = "web";
+      options.ClientSecret = "secret";
+      options.ResponseType = "code";
+
+      options.Scope.Clear();
+      options.Scope.Add("openid");
+      options.Scope.Add("profile");
+      options.Scope.Add("scope1");
+      options.Scope.Add("scope2");
+      options.Scope.Add("verification");
+      options.ClaimActions.MapJsonKey("email_verified", "email_verified");
+      options.GetClaimsFromUserInfoEndpoint = true;
+
+      options.MapInboundClaims = false; // Don't rename claim types
+
+      options.SaveTokens = true;
+  });
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.ToString());
 }
 
-// request token
-var tokenResponse = await client.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
-{
-    Address = disco.TokenEndpoint,
-    ClientId = "client",
-    ClientSecret = "secret",
-    Scope = "api1"
-});
+var app = builder.Build();
 
-if (tokenResponse.IsError)
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
 {
-    Console.WriteLine(tokenResponse.Error);
-    Console.WriteLine(tokenResponse.ErrorDescription);
-    //return 1;
+    app.UseExceptionHandler("/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
 }
 
-Console.WriteLine(tokenResponse.AccessToken);
+app.UseHttpsRedirection();
+
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapStaticAssets();
+app.MapRazorPages()
+   .WithStaticAssets()
+   .RequireAuthorization();
+
+app.Run();

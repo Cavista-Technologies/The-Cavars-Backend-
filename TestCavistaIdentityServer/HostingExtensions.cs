@@ -1,5 +1,6 @@
 using Duende.IdentityServer;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Filters;
@@ -56,10 +57,12 @@ namespace TestCavistaIdentityServer
                     options.Events.RaiseSuccessEvents = true;
 
                     // Use a large chunk size for diagnostic logs in development where it will be redirected to a local file
-                    if (builder.Environment.IsDevelopment())
+                    if (builder.Environment.IsDevelopment() || builder.Environment.IsProduction())
                     {
                         options.Diagnostics.ChunkSize = 1024 * 1024 * 10; // 10 MB
                     }
+
+                    options.IssuerUri = "https://cavistatestidentityserver.onrender.com"; // Force HTTPS issuer
                 })
                 .AddTestUsers(TestUsers.Users)
                 .AddLicenseSummary();
@@ -105,7 +108,13 @@ namespace TestCavistaIdentityServer
             // add `.PersistKeysTo…()` and `.ProtectKeysWith…()` calls
             // see more at https://docs.duendesoftware.com/general/data-protection
             _ = builder.Services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo("Keys"))
                        .SetApplicationName("IdentityServer");
+
+            builder.Services.AddHttpsRedirection(options =>
+            {
+                options.HttpsPort = 443; // Render always uses 443 for HTTPS
+            });
 
             return builder.Build();
         }
@@ -114,10 +123,27 @@ namespace TestCavistaIdentityServer
         {
             _ = app.UseSerilogRequestLogging();
 
-            if (app.Environment.IsDevelopment())
+            if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
             {
                 _ = app.UseDeveloperExceptionPage();
             }
+
+            var forwardedHeaderOptions = new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            };
+
+            // Trust all networks/proxies (Render runs behind its own load balancer)
+            forwardedHeaderOptions.KnownNetworks.Clear();
+            forwardedHeaderOptions.KnownProxies.Clear();
+
+            // Optional: only redirect in dev, Render already enforces HTTPS
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
+
+            app.UseForwardedHeaders(forwardedHeaderOptions);
 
             _ = app.UseStaticFiles();
             _ = app.UseRouting();
