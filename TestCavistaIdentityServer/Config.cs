@@ -62,13 +62,19 @@ namespace TestCavistaIdentityServer
                        RedirectUris = 
                         {  "http://interactivewebclient.onrender.com/signin-oidc",
                            "https://localhost:44300/signin-oidc",          // for local dev
-                           "https://interactivewebclient.onrender.com/signin-oidc" // for Render deployment                               
+                           "https://interactivewebclient.onrender.com/signin-oidc", // for Render deployment
+                           "http://laptrac.netlify.app/auth/callback",
+                           "https://laptrac.netlify.app/auth/callback"
                         },
 
                        // RedirectUris = { "https://localhost:44300/signin-oidc" },
 
                         // where to redirect to after logout
-                        PostLogoutRedirectUris = { "https://interactivewebclient.onrender.com/signout-callback-oidc" },
+                        PostLogoutRedirectUris = {
+                            "https://interactivewebclient.onrender.com/signout-callback-oidc",
+                            "https://laptrac.netlify.app/login",
+                            "http://laptrac.netlify.app/login"
+                        },
 
                         RequirePkce = true,
                         AllowOfflineAccess = true,

@@ -46,7 +46,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Command
             CLMDbContext context,
             CancellationToken token)
         {
-            var currentUser = await userService.GetCurrentUser();
+            var currentUser = await userService.GetCurrentUserAsync();
 
             if (currentUser == null)
             {
@@ -65,7 +65,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Command
             context.Tickets.Add(ticketToAdd);
 
             var userLaptop = await context.UserLaptops
-                .Where(x => x.UserID == currentUser.Id && !x.IsDeprecated)
+                .Where(x => x.UserId == currentUser.Id && !x.IsDeprecated)
                 .FirstOrDefaultAsync(token);
 
             if (userLaptop == null)
@@ -73,7 +73,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Command
                 return TypedResults.NotFound();
             }
 
-            var historyToAdd = new TicketHistory
+            var historyToAdd = new Database.Entities.TicketHistory
             {
                 UserLaptopID = userLaptop.Id,
                 TicketID = ticketToAdd.Id,
@@ -88,7 +88,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Command
             {
                 if (await context.SaveChangesAsync() > 0)
                 {
-                    await auditTrailService.AddAuditTrail(currentUser.Id, AuditTrailService.AuditAction.Create, AuditTrailService.AuditOn.Ticket, ticketToAdd.Id);
+                    await auditTrailService.AddAuditTrailAsync(currentUser.Id, AuditTrailService.AuditAction.Create, AuditTrailService.AuditOn.Ticket, ticketToAdd.Id);
 
                     return TypedResults.Ok(new Response { TicketId = ticketToAdd.Id });
                 }

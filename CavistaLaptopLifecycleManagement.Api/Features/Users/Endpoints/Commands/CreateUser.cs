@@ -27,7 +27,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Users.Endpoints.Commands
 
             public string? MiddleName { get; init; }
 
-            public  List<Role> Role { get; init; }
+            public  Role Role { get; init; }
         }
 
         public sealed record Command
@@ -62,7 +62,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Users.Endpoints.Commands
             UserService userService,
             CancellationToken token)
         {
-            var user = await userService.GetCurrentUser();
+            var user = await userService.GetCurrentUserAsync();
 
             if (user == null)
             {
@@ -77,7 +77,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Users.Endpoints.Commands
                 FirstName = requestBody.FirstName,
                 LastName = requestBody.LastName,
                 MiddleName = requestBody.MiddleName,
-                Roles = JsonSerializer.Serialize(requestBody.Role),                
+                Role = requestBody.Role,                
                 Created_At = DateTime.UtcNow.ToUniversalTime(),
                 Modified = DateTime.UtcNow.ToUniversalTime()
             };
@@ -88,7 +88,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Users.Endpoints.Commands
             {
                 if (await context.SaveChangesAsync() > 0)
                 {
-                    await auditTrailService.AddAuditTrail(user.Id, AuditTrailService.AuditAction.Create, AuditTrailService.AuditOn.User, userToAdd.Id);
+                    await auditTrailService.AddAuditTrailAsync(user.Id, AuditTrailService.AuditAction.Create, AuditTrailService.AuditOn.User, userToAdd.Id);
 
                     return TypedResults.Ok(new CreateUserResponse(userToAdd.Id));
                 }

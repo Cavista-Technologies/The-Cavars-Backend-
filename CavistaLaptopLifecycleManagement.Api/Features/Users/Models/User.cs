@@ -1,4 +1,5 @@
-﻿using CavistaLaptopLifecycleManagement.Api.Features.Users.Services;
+﻿using CavistaLaptopLifecycleManagement.Api.Features.Laptop.Models;
+using CavistaLaptopLifecycleManagement.Api.Features.Users.Services;
 using Immediate.Apis.Shared;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
@@ -26,7 +27,9 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Users.Models
 
         public DateTimeOffset? LastLogin { get; set; }
 
-        public IReadOnlyList<int> Roles { get; set; } = [];
+        public Role Role { get; set; }
+
+        public IReadOnlyList<UserLaptop> UserLaptops { get; set; }
 
         public bool Equals(User? other) =>
             other != null
@@ -44,7 +47,21 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Users.Models
                 EmailAddress = u.EmailAddress,
                 IsActive = u.IsActive,
                 LastLogin = u.LastLogin,
-                Roles = ToRoles(u.Roles),
+                Role = u.Role,
+                UserLaptops = u.UserLaptops.Select(x => new UserLaptop 
+                {
+                  UserID = x.UserId,
+                    AssetName = x.AssetName,
+                    Model = x.Model,
+                    Comment = x.Comment,
+                    AssetLocation = x.AssetLocation,
+                    EmployeeDepartment = x.EmployeeDepartment,
+                    Price = x.Price,
+                    EstimationUsefulLifeYear = x.EstimationUsefulLifeYear,
+                    DepreciationEstimationDate = x.DepreciationEstimationDate,
+                    WarrantyExpirationDate = x.WarrantyExpirationDate,
+                    PurchaseYear = x.PurchaseYear
+                }).ToList()
             };
 
         private static List<int> ToRoles(string roles)
