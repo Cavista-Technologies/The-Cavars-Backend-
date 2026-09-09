@@ -1,6 +1,5 @@
 ﻿using CavistaLaptopLifecycleManagement.Api.Database;
 using CavistaLaptopLifecycleManagement.Api.Features.Shared;
-using CavistaLaptopLifecycleManagement.Api.Features.Shared.Extensions;
 using CavistaLaptopLifecycleManagement.Api.Features.Ticket.Models;
 using Immediate.Apis.Shared;
 using Immediate.Handlers.Shared;
@@ -14,30 +13,52 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Queries
     [MapGet("")]
     [MapGroup<TicketMapGroup>]
     public static partial class GetTickets
-    {
-        public record Query([FromQuery] int? pageNumber, [FromQuery] int? pageSize);
+    {        
+        public sealed class FetAllTickets
+        {
+            [FromQuery]
+            public int? pageNumber { get; set; }
+
+            [FromQuery]
+            public  int? pageSize { get; set; }
+
+            [FromQuery]
+            public required string? searchString { get; set; }
+        }
 
         private async static ValueTask<Results<Ok<PaginatedList<TicketCommentDetail>>, BadRequest>> HandleAsync(
-            Query request,
+            FetAllTickets request,
             CLMDbContext context,
             CancellationToken token)
         {
+            bool searchStringIsNullOrEmpty = string.IsNullOrWhiteSpace(request.searchString) ? true : false;
+            int ticketNumber = 0;
+
+            if (!searchStringIsNullOrEmpty)
+            {
+                string? numericPart = request?.searchString != null ? new string(request.searchString.Where(char.IsDigit).ToArray()) : default;
+
+                ticketNumber = !int.TryParse(numericPart, out int rawNumber) ? rawNumber : rawNumber;
+            }       
+
             var userTicketList = from ticket in context.Tickets
-                     where !ticket.IsDeprecated
-                     join user in context.Users on ticket.UserId equals user.Id
-                     where !user.IsDeprecated
-                     join userLaptop in context.UserLaptops on user.Id equals userLaptop.UserId into laptopList
+                     where !ticket.IsDeprecated 
+                     && (searchStringIsNullOrEmpty || ticket.TicketNumber == ticketNumber)
+                     join userLaptop in context.UserLaptops on ticket.LaptopId equals userLaptop.Id into laptopList
                      from laptop in laptopList.DefaultIfEmpty()
+                     join user in context.Users on ticket.UserId equals user.Id
+                     where !user.IsDeprecated                     
                      join LaptopOwner in context.Users on ticket.UserId equals LaptopOwner.Id into laptopOwnerList
                      from LaptopOwner in laptopOwnerList.DefaultIfEmpty()
                      select new TicketCommentDetail
                      {
-                         UserLaptopID = laptop.Id,
+                         TicketNumber = $"CLM-{ticket.TicketNumber:D8}",
+                         UserLaptopID = laptop != null ? laptop.Id : null,
                          Id = ticket.Id,
                          Comment = ticket.Comment,
                          AssignedTo = user.FirstName,
-                         OwnerId = laptop.UserId,
-                         OwnerName = $"{LaptopOwner.FirstName}  {LaptopOwner.LastName}",
+                         OwnerId = LaptopOwner != null ? LaptopOwner.Id : null,
+                         OwnerName = LaptopOwner != null ? $"{LaptopOwner.FirstName}  {LaptopOwner.LastName}" : string.Empty,
                          TicketStatus = ticket.TicketStatus
                      };
 

@@ -54,7 +54,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Endpoints.Command
             }
         }
 
-        private async static ValueTask<Results<Ok<UpdateUserResponse>, BadRequest<UpdateUserResponse>, UnauthorizedHttpResult, NoContent>> HandleAsync(
+        private async static ValueTask<Results<Ok<UpdateUserResponse>, BadRequest<UpdateUserResponse>, UnauthorizedHttpResult, StatusCodeHttpResult>> HandleAsync(
             Command command,
             UserLaptopService userLaptopService,
             AuditTrailService auditTrailService,
@@ -119,10 +119,15 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Endpoints.Command
                     existingLaptop.UserId = null;
                     existingLaptop.UserLaptopStatus = UserLaptopHistoryStatus.UnAssigned;
                 }
+                else
+                {
+                    existingLaptop.UserId = null;
+                    existingLaptop.UserLaptopStatus = requestBody.Status;
+                }
             }
             else
             {
-                return TypedResults.NoContent();
+                return TypedResults.StatusCode(304);
             }
 
             var lapTopHistoryToAdd = new Database.Entities.LaptopHistory
@@ -143,7 +148,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Endpoints.Command
             {
                 var notificationMessage = $"{existingLaptop.AssetName} has been assigned to you";
 
-                await notificationService.NotifyUser(context, requestBody.UserID.Value, notificationMessage);
+                _ = Task.Run(() => notificationService.NotifyUser(requestBody.UserID.Value, notificationMessage));
             }
 
             try

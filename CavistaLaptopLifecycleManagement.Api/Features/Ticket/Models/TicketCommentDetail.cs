@@ -4,9 +4,11 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Models
 {
     public class TicketCommentDetail
     {
-        public Guid UserLaptopID { get; set; }
+        public Guid? UserLaptopID { get; set; }
 
         public Guid Id { get; set; }
+
+        public string TicketNumber { get; set; }
 
         public Guid? OwnerId { get; set; }
 
