@@ -56,7 +56,6 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Command
             }
         }
 
-
         private async static ValueTask<Results<Ok<CreateTicketResponse>, BadRequest<CreateTicketResponse>, NotFound<CreateTicketResponse>, UnauthorizedHttpResult>> HandleAsync(
             Command request,
             UserService userService,
