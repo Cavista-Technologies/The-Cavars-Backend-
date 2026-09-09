@@ -1,7 +1,6 @@
 ﻿using CavistaLaptopLifecycleManagement.Api.Database;
 using CavistaLaptopLifecycleManagement.Api.Features.Laptop.Models;
 using CavistaLaptopLifecycleManagement.Api.Features.Shared;
-using CavistaLaptopLifecycleManagement.Api.Features.Shared.Extensions;
 using CavistaLaptopLifecycleManagement.Api.Features.Users.Services;
 using Immediate.Apis.Shared;
 using Immediate.Handlers.Shared;
@@ -36,7 +35,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Endpoints.Queries
                               && userLaptop.UserId == currentUser.Id
                               join user in context.Users on userLaptop.UserId equals user.Id into users
                               from curUser in users.DefaultIfEmpty()
-                              select new Models.UserLaptop
+                              select new UserLaptop
                               {
                                   Id = userLaptop.Id,
                                   UserId = userLaptop.UserId,
@@ -50,12 +49,12 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Endpoints.Queries
                                   DepreciationEstimationDate = userLaptop.DepreciationEstimationDate,
                                   WarrantyExpirationDate = userLaptop.WarrantyExpirationDate,
                                   PurchaseYear = userLaptop.PurchaseYear,
-                                  status = userLaptop.UserLaptopStatus.GetDescription(),
+                                  status = userLaptop.UserLaptopStatus,
                                   AssignedToEmail = curUser.EmailAddress,
                                   AssignedToName = curUser.FullName
                               };
 
-            var pagedResult = await PaginatedList<Models.UserLaptop>.CreateAsync(userLaptops, request.pageNumber ?? 1, request.pageSize ?? 10);
+            var pagedResult = await PaginatedList<UserLaptop>.CreateAsync(userLaptops, request.pageNumber ?? 1, request.pageSize ?? 10);
 
             var listOfLaptopIds = pagedResult.Item.Select(x => x.Id).ToList();
 
@@ -70,7 +69,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Endpoints.Queries
                                                ActionBy = laptopHis.ActionBy,
                                                ActionByName = user.FullName,
                                                Comment = laptopHis.Comment,
-                                               UserLaptopHistoryStatus = laptopHis.UserLaptopHistoryStatus.GetDescription(),
+                                               UserLaptopHistoryStatus = laptopHis.UserLaptopHistoryStatus,
                                                CreatedAt = laptopHis.Created_At
                                            }).ToListAsync();
 
