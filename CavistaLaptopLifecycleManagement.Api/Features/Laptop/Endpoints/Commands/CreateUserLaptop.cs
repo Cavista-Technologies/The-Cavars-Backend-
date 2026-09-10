@@ -6,6 +6,7 @@ using CavistaLaptopLifecycleManagement.Api.Features.Users.Services;
 using Immediate.Apis.Shared;
 using Immediate.Handlers.Shared;
 using Immediate.Validations.Shared;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -16,6 +17,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Endpoints
     [Handler]
     [MapPost("create")]
     [MapGroup<LaptopMapGroup>]
+    [Authorize(Policy = Policies.ITRolePolicy)]
     public static partial class CreateUserLaptop
     {
         [Validate]
@@ -77,7 +79,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Endpoints
 
             var requestBody = command.Body;
 
-            var laptopToAdd = new Database.Entities.UserLaptop
+            var laptopToAdd = new Database.Entities.Laptop
             {
                 AssetName = requestBody.AssetName,
                 Model = requestBody.Model,
@@ -93,7 +95,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Endpoints
                 Modified = DateTime.UtcNow.ToUniversalTime()
             };
 
-            context.UserLaptops.Add(laptopToAdd);
+            context.Laptops.Add(laptopToAdd);
 
             await auditTrailService.AddAuditTrailAsync(context, user.Id, AuditTrailService.AuditAction.Create, AuditTrailService.AuditOn.Laptop, laptopToAdd.Id);
 

@@ -37,7 +37,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Models
 
         public List<LaptopHistory> LaptopHistories { get; set; }
 
-        public static readonly Expression<Func<Database.Entities.UserLaptop, UserLaptop>> FromDatabaseEntity =
+        public static readonly Expression<Func<Database.Entities.Laptop, UserLaptop>> FromDatabaseEntity =
         u => new()
         {
             Id = u.Id,
@@ -51,14 +51,14 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Models
             EstimationUsefulLifeYear = u.EstimationUsefulLifeYear,
             DepreciationEstimationDate = u.DepreciationEstimationDate,
             WarrantyExpirationDate = u.WarrantyExpirationDate,
-            PurchaseYear = u.PurchaseYear
-            //LaptopHistories = u.LaptopHistories != null ? u.LaptopHistories.Select(x => new LaptopHistory
-            //{
-            //    UserLaptopID = x.UserLaptopID,
-            //    Comment = x.Comment,
-            //    ActionBy = x.ActionBy
+            PurchaseYear = u.PurchaseYear,
+            LaptopHistories = u.LaptopHistories != null ? u.LaptopHistories.Select(x => new LaptopHistory
+            {
+                UserLaptopID = x.UserLaptopID,
+                Comment = x.Comment,
+                ActionBy = x.ActionBy
 
-            //}).ToList() : new List<TicketHistory>()
+            }).ToList() : new List<LaptopHistory>()
         };
         }
 
@@ -68,7 +68,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Models
     {
         private static void CustomizeGroup(RouteGroupBuilder group)
             => group
-                //.RequireAuthorization()
+                .RequireAuthorization()
                 .WithTags("Laptops");
     }
 }

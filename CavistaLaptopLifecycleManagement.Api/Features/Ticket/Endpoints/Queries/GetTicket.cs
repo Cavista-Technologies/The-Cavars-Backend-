@@ -24,7 +24,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Queries
             var userTicket = await (from ticket in context.Tickets
                                  where ticket.Id == request.TicketId
                                  && !ticket.IsDeprecated
-                                 join userLaptop in context.UserLaptops on ticket.LaptopId equals userLaptop.Id into laptopList
+                                 join userLaptop in context.Laptops on ticket.LaptopId equals userLaptop.Id into laptopList
                                  from laptop in laptopList.DefaultIfEmpty()
                                  join user in context.Users on ticket.UserId equals user.Id
                                  where !user.IsDeprecated                                
@@ -37,6 +37,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Queries
                                      Id = ticket.Id,
                                      Comment = ticket.Comment,
                                      AssignedTo = user.FirstName,
+                                     AssignedToEmail = user.EmailAddress,
                                      OwnerId = LaptopOwner != null ? LaptopOwner.Id : null,
                                      OwnerName = LaptopOwner != null ? $"{LaptopOwner.FirstName}  {LaptopOwner.LastName}" : string.Empty,
                                      TicketStatus = ticket.TicketStatus
