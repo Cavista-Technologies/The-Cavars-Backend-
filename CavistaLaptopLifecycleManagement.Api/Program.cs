@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using System.Security.Claims;
-
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,9 +28,39 @@ builder.Services.AddAuthorization(options =>
        policy.Requirements.Add(new ITRoleRequirement(ClaimTypes.NameIdentifier)));
 });
 
+builder.Services.AddEndpointsApiExplorer();
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Cavista Laptop Management", Version = "v1" });
+
+    // Define the Bearer scheme
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter 'Bearer' followed by your JWT token."
+    });
+
+    // Apply the scheme globally
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 builder.Services.AddDbContextPool<CLMDbContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("DBConnection")));
@@ -64,14 +94,13 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
-{
-    app.MapOpenApi();
-
+{  
     app.MapScalarApiReference();
+    app.UseSwagger();
 
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "API V1");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Management API v1");
     });
 }
 
