@@ -1,6 +1,5 @@
 ﻿using CavistaLaptopLifecycleManagement.Api.Database;
 using CavistaLaptopLifecycleManagement.Api.Features.Shared;
-using CavistaLaptopLifecycleManagement.Api.Features.Shared.Extensions;
 using CavistaLaptopLifecycleManagement.Api.Features.Ticket.Models;
 using CavistaLaptopLifecycleManagement.Api.Features.Users.Services;
 using Immediate.Apis.Shared;
@@ -31,19 +30,18 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Queries
                 return TypedResults.Unauthorized();
             }
 
-            bool searchStringIsNullOrEmpty = string.IsNullOrWhiteSpace(request.searchString) ? true : false;
-            int ticketNumber = 0;
+            bool searchStringIsNullOrEmpty = true;
+            var searchString = string.Empty;
 
-            if (!searchStringIsNullOrEmpty)
+            if (!string.IsNullOrWhiteSpace(request.searchString))
             {
-                string? numericPart = request?.searchString != null ? new string(request.searchString.Where(char.IsDigit).ToArray()) : default;
-
-                ticketNumber = !int.TryParse(numericPart, out int rawNumber) ? rawNumber : rawNumber;
+                searchString = request.searchString;
+                searchStringIsNullOrEmpty = false;
             }
 
             var userTicketList = from ticket in context.Tickets
                                  where ticket.UserId == currentUser.Id
-                                 && !ticket.IsDeprecated && (searchStringIsNullOrEmpty || ticket.TicketNumber == ticketNumber)
+                                 && (searchStringIsNullOrEmpty || ticket.TicketNumber.ToLower().Contains(searchString.ToLower()))
                                  join userLaptop in context.Laptops on ticket.LaptopId equals userLaptop.Id into laptopList
                                  from laptop in laptopList.DefaultIfEmpty()
                                  join user in context.Users on ticket.UserId equals user.Id
@@ -52,7 +50,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Queries
                                  from LaptopOwner in laptopOwnerList.DefaultIfEmpty()
                                  select new TicketCommentDetail
                                  {
-                                     TicketNumber = $"CLM-{ticket.TicketNumber:D8}",
+                                     TicketNumber = ticket.TicketNumber,
                                      UserLaptopID = laptop != null ? laptop.Id : null,
                                      Id = ticket.Id,
                                      Comment = ticket.Comment,

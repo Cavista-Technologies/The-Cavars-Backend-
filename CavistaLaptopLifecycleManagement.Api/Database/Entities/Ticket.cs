@@ -4,9 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace CavistaLaptopLifecycleManagement.Api.Database.Entities
 {
     public class Ticket : BaseEntity
-    {
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int TicketNumber {  get; set; }
+    {       
+        public string TicketNumber {  get; set; }
 
         public Guid UserId { get; set; }
 
@@ -17,7 +16,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Database.Entities
 
         public string? Comment { get; set; }
 
-        public TicketHistoryStatus? TicketStatus { get; set; }
+        public TicketHistoryStatus TicketStatus { get; set; }
 
         public ICollection<TicketHistory>? TicketHistories { get; set; }
     }

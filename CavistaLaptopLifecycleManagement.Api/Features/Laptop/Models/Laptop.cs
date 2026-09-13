@@ -25,7 +25,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Models
 
         public string AssignedToEmail { get; set; }
 
-        public UserLaptopHistoryStatus status { get; set; }
+        public LaptopHistoryStatus status { get; set; }
 
         public Decimal Price { get; set; }
 
@@ -66,8 +66,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Laptop.Models
 
             }).ToList() : new List<LaptopHistory>()
         };
-        }
-
+     }
 
     [RouteGroup("api/laptops")]
     public sealed partial class LaptopMapGroup

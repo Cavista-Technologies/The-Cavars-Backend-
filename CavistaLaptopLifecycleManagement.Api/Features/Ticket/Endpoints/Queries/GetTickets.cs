@@ -17,7 +17,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Queries
     [Authorize(Policy = Policies.ITRolePolicy)]
     public static partial class GetTickets
     {        
-        public sealed class FetAllTickets
+        public sealed class GetAllTickets
         {
             [FromQuery]
             public int? pageNumber { get; set; }
@@ -26,27 +26,26 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Queries
             public  int? pageSize { get; set; }
 
             [FromQuery]
-            public required string? searchString { get; set; }
+            public string? searchString { get; set; }
         }
 
         private async static ValueTask<Results<Ok<PaginatedList<TicketCommentDetail>>, BadRequest>> HandleAsync(
-            FetAllTickets request,
+            GetAllTickets request,
             CLMDbContext context,
             CancellationToken token)
         {
-            bool searchStringIsNullOrEmpty = string.IsNullOrWhiteSpace(request.searchString) ? true : false;
-            int ticketNumber = 0;
+            bool searchStringIsNullOrEmpty =  true;
+            var searchString = string.Empty;
 
-            if (!searchStringIsNullOrEmpty)
-            {
-                string? numericPart = request?.searchString != null ? new string(request.searchString.Where(char.IsDigit).ToArray()) : default;
-
-                ticketNumber = !int.TryParse(numericPart, out int rawNumber) ? rawNumber : rawNumber;
+            if (!string.IsNullOrWhiteSpace(request.searchString))
+            {               
+                searchString = request.searchString;
+                searchStringIsNullOrEmpty = false;
             }       
 
             var userTicketList = from ticket in context.Tickets
                      where !ticket.IsDeprecated 
-                     && (searchStringIsNullOrEmpty || ticket.TicketNumber == ticketNumber)
+                     && (searchStringIsNullOrEmpty || ticket.TicketNumber.ToLower().Contains(searchString.ToLower()))
                      join userLaptop in context.Laptops on ticket.LaptopId equals userLaptop.Id into laptopList
                      from laptop in laptopList.DefaultIfEmpty()
                      join user in context.Users on ticket.UserId equals user.Id
@@ -55,7 +54,7 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Queries
                      from LaptopOwner in laptopOwnerList.DefaultIfEmpty()
                      select new TicketCommentDetail
                      {
-                         TicketNumber = $"CLM-{ticket.TicketNumber:D8}",
+                         TicketNumber = ticket.TicketNumber,
                          UserLaptopID = laptop != null ? laptop.Id : null,
                          Id = ticket.Id,
                          Comment = ticket.Comment,
