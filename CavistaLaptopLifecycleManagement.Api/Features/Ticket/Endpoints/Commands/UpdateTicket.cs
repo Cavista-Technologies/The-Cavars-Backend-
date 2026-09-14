@@ -4,12 +4,14 @@ using CavistaLaptopLifecycleManagement.Api.Features.Laptop.Services;
 using CavistaLaptopLifecycleManagement.Api.Features.Shared.Services;
 using CavistaLaptopLifecycleManagement.Api.Features.Ticket.Models;
 using CavistaLaptopLifecycleManagement.Api.Features.Ticket.Services;
+using CavistaLaptopLifecycleManagement.Api.Features.Users.Models;
 using CavistaLaptopLifecycleManagement.Api.Features.Users.Services;
 using Immediate.Apis.Shared;
 using Immediate.Handlers.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Commands
@@ -134,12 +136,12 @@ namespace CavistaLaptopLifecycleManagement.Api.Features.Ticket.Endpoints.Command
 
             await auditTrailService.AddAuditTrailAsync(context, CurrentUser.Id, AuditTrailService.AuditAction.Update, AuditTrailService.AuditOn.Ticket, existingTicket.Id);
 
-            _ = Task.Run(() => notificationService.NotifyUser(existingTicket.UserId, notificationMessage));
-
             try
             {
                 if (await context.SaveChangesAsync() > 0)
-                {                  
+                {
+                    await notificationService.NotifyUser(existingTicket.UserId, notificationMessage);
+
                     return TypedResults.Ok(new UpdateTicketResponse(existingTicket.Id));
                 }
             }
