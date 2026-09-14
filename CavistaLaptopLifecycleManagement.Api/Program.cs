@@ -29,7 +29,7 @@ builder.Services.AddAuthentication()
     .AddJwtBearer(option =>
     {
         option.Authority = configuration["AppSettings:IdentityAddress"];
-
+        //option.Authority = "https://localhost:5001";
         option.TokenValidationParameters.ValidateAudience = false;
     });
 
